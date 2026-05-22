@@ -59,8 +59,10 @@ export class HomePage extends BasePage {
   async verifyResultsContainKeyword(keyword: string) {
     const keywordLinks = this.page.getByRole('link', { name: new RegExp(keyword, 'i') });
     const count = await keywordLinks.count();
-    if (count === 0) {
-      console.log(`No links found containing "${keyword}"`);
-    }
+    expect(count).toBeGreaterThan(1);
+  }
+
+  async verifyBookIsShown(title: string) {
+    await expect(this.page.getByRole('link', { name: new RegExp(title, 'i') }).first()).toBeVisible();
   }
 }
