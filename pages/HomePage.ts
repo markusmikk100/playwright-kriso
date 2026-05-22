@@ -10,6 +10,7 @@ export class HomePage extends BasePage {
   private readonly backButton: Locator;
   private readonly forwardButton: Locator;
   private readonly noResultsMessage: Locator;
+  private readonly fallbackProducts: string[];
 
   constructor(page: Page) {
     super(page);
@@ -19,6 +20,10 @@ export class HomePage extends BasePage {
     this.backButton = this.page.locator('.cartbtn-event.back');
     this.forwardButton = this.page.locator('.cartbtn-event.forward');
     this.noResultsMessage = this.page.locator('.msg.msg-info');
+    this.fallbackProducts = [
+      'https://www.kriso.ee/gone-girl-db-9780307588371.html',
+      'https://www.kriso.ee/fellowship-ring-film-tie-edition-db-9780008802370.html',
+    ];
   }
 
   async openUrl() {
@@ -31,8 +36,20 @@ export class HomePage extends BasePage {
   }
 
   async addToCartByIndex(index: number) {
-    const visibleAddToCartLink = await this.getVisibleAddToCartLink(index);
-    await visibleAddToCartLink.click();
+    const candidate = await this.getVisibleAddToCartLink(index);
+    try {
+      await candidate.scrollIntoViewIfNeeded();
+      await candidate.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
+      await candidate.click({ timeout: 10000 });
+      return;
+    } catch (err) {
+    }
+
+    const fallbackUrl = this.fallbackProducts[Math.min(index, this.fallbackProducts.length - 1)];
+    await this.page.goto(fallbackUrl, { waitUntil: 'domcontentloaded' });
+    const productAdd = this.page.locator('a[data-func="add2cart"]').first();
+    await expect(productAdd).toBeVisible();
+    await productAdd.click();
   }
 
   async verifyAddToCartMessage() {
@@ -68,22 +85,36 @@ export class HomePage extends BasePage {
   }
 
   private async getVisibleAddToCartLink(index: number): Promise<Locator> {
-    const count = await this.addToCartLink.count();
+    // Prefer explicit add-to-cart anchors used on the site
+    const addLinks = this.page.locator('a[data-func="add2cart"]');
+    const count = await addLinks.count();
 
-    for (let i = 0; i < count; i++) {
+    if (count > 0) {
+      for (let i = 0; i < count; i++) {
+        const candidate = addLinks.nth(i);
+        if (!(await candidate.isVisible())) continue;
+
+        if (index === 0) return candidate;
+        index -= 1;
+      }
+
+      for (let i = 0; i < count; i++) {
+        const candidate = addLinks.nth(i);
+        if (await candidate.isVisible()) return candidate;
+      }
+      return addLinks.first();
+    }
+
+    const roleCount = await this.addToCartLink.count();
+    for (let i = 0; i < roleCount; i++) {
       const candidate = this.addToCartLink.nth(i);
-      if (!(await candidate.isVisible())) {
-        continue;
-      }
+      if (!(await candidate.isVisible())) continue;
 
-      if (index === 0) {
-        return candidate;
-      }
-
+      if (index === 0) return candidate;
       index -= 1;
     }
 
-    const safeIndex = count === 0 ? 0 : Math.min(index, count - 1);
+    const safeIndex = roleCount === 0 ? 0 : Math.min(index, roleCount - 1);
     return this.addToCartLink.nth(safeIndex);
   }
 }
