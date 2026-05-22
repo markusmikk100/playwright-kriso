@@ -24,6 +24,7 @@ test('Test logo is visible', async () => {
 
 test('Test add one book to cart', async () => {
   await homePage.searchByKeyword('harry potter');
+  await homePage.verifyResultsCountMoreThan(1);
   await homePage.addToCartByIndex(0);
   await homePage.verifyAddToCartMessage();
   await homePage.verifyCartCount(1);

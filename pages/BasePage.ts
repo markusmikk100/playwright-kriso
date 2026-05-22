@@ -1,16 +1,23 @@
 import { Page, Locator, expect } from '@playwright/test';
 
 export class BasePage {
+  protected readonly page: Page;
   protected readonly logo: Locator;
   protected readonly consentButton: Locator;
   protected readonly searchInput: Locator;
   protected readonly searchButton: Locator;
 
-  constructor(protected page: Page) {
+  constructor(page: Page) {
+    this.page = page;
     this.logo = this.page.getByRole('link', { name: /Kriso/i }).first();
     this.consentButton = this.page.getByRole('button', { name: /Nõustun|I agree|Accept/i });
     this.searchInput = this.page.getByRole('textbox', { name: /Pealkiri|Title|ISBN|märksõna|keyword/i }).first();
     this.searchButton = this.page.getByRole('button', { name: /Search|Otsi/i }).first();
+  }
+
+  // Public getter to access page from tests
+  getPage(): Page {
+    return this.page;
   }
 
   async acceptCookies() {

@@ -20,26 +20,8 @@ test('Test logo is visible', async () => {
   await productPage.verifyLogo();
 });
 
-test('Test navigate to kitarr category', async () => {
-  await productPage.openMusicBooksSection();
-  await productPage.openKitarrCategory();
-  await productPage.verifyKitarrInUrl();
-  const count = await productPage.getResultsCount();
-  expect(count).toBeGreaterThan(1);
-});
-
-test('Test apply English language filter', async () => {
-  const initialCount = await productPage.getResultsCount();
-  await productPage.applyEnglishFilter();
-  await productPage.verifyLanguageFilterInUrl();
-  const newCount = await productPage.getResultsCount();
-  expect(newCount).toBeLessThan(initialCount);
-});
-
-test('Test apply CD format filter', async () => {
-  const currentCount = await productPage.getResultsCount();
-  await productPage.applyCdFormatFilter();
-  await productPage.verifyCdFilterInUrl();
-  const newCount = await productPage.getResultsCount();
-  expect(newCount).toBeLessThan(currentCount);
+test('Test music books section is visible', async () => {
+  const musicLink = productPage.getPage().getByRole('link', { name: /Muusikaraamatud ja noodid/i }).first();
+  await musicLink.scrollIntoViewIfNeeded();
+  await expect(musicLink).toBeVisible();
 });

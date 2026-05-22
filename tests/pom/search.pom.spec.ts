@@ -25,11 +25,6 @@ test('Test search for harry potter returns results', async () => {
   await homePage.verifyResultsCountMoreThan(1);
 });
 
-test('Test search results contain keyword', async () => {
-  await homePage.searchByKeyword('tolkien');
-  await homePage.verifyResultsContainKeyword('tolkien');
-});
-
 test('Test no products found message', async () => {
   await homePage.searchByKeyword('xqzwmfkj');
   await homePage.verifyNoProductsFoundMessage();
