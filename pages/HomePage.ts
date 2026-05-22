@@ -31,7 +31,8 @@ export class HomePage extends BasePage {
   }
 
   async addToCartByIndex(index: number) {
-    await this.addToCartLink.nth(index).click();
+    const visibleAddToCartLink = await this.getVisibleAddToCartLink(index);
+    await visibleAddToCartLink.click();
   }
 
   async verifyAddToCartMessage() {
@@ -64,5 +65,25 @@ export class HomePage extends BasePage {
 
   async verifyBookIsShown(title: string) {
     await expect(this.page.getByRole('link', { name: new RegExp(title, 'i') }).first()).toBeVisible();
+  }
+
+  private async getVisibleAddToCartLink(index: number): Promise<Locator> {
+    const count = await this.addToCartLink.count();
+
+    for (let i = 0; i < count; i++) {
+      const candidate = this.addToCartLink.nth(i);
+      if (!(await candidate.isVisible())) {
+        continue;
+      }
+
+      if (index === 0) {
+        return candidate;
+      }
+
+      index -= 1;
+    }
+
+    const safeIndex = count === 0 ? 0 : Math.min(index, count - 1);
+    return this.addToCartLink.nth(safeIndex);
   }
 }
